@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<texture version="1" file="game_1.pvr.ccz" type="pvrccz" width="64" height="128" pixelformat="RGBA_4444" minfilter="linear" magfilter="linear" wrapt="clamp" wraps="clamp" premultiplyalpha="false">
+    <!-- Created with TexturePacker http://www.codeandweb.com/texturepacker -->
+    <!-- $TexturePacker:SmartUpdate:3c6c5d75a905be981624dfb5b41933b0:16e3e6f852deecebed501b3a2c899deb:29846192b521227c0cb4f431f5b01acb$ -->
+    <textureregion id="0" src="greenstar.png" x="2" y="2" width="32" height="32" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="32" srcheight="32"/>
+    <textureregion id="1" src="mbg.png" x="36" y="2" width="4" height="4" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="4" srcheight="4"/>
+    <textureregion id="2" src="redstar.png" x="2" y="36" width="32" height="32" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="32" srcheight="32"/>
+    <textureregion id="3" src="yellowstar.png" x="2" y="70" width="32" height="32" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="32" srcheight="32"/>
+</texture>

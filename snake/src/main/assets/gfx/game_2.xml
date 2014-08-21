@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<texture version="1" file="game_2.pvr.ccz" type="pvrccz" width="512" height="1024" pixelformat="RGBA_4444" minfilter="linear" magfilter="linear" wrapt="clamp" wraps="clamp" premultiplyalpha="false">
+    <!-- Created with TexturePacker http://www.codeandweb.com/texturepacker -->
+    <!-- $TexturePacker:SmartUpdate:81925a869eccd54127f990f7be1fb9e7:7f6e60b2ccb3c89dba0c250011abe610:f3574a27c96997861889f4f9d5880cfa$ -->
+    <textureregion id="0" src="game_bg.png" x="2" y="2" width="480" height="800" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="480" srcheight="800"/>
+</texture>
