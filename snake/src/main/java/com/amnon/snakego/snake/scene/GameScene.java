@@ -86,7 +86,7 @@ public class GameScene extends Scene {
      * A hash that maps integer handles specified by the subclasser to the
      * drawable that will be used for that reference
      */
-    private Sprite[] mTileArray;
+    private AnimatedSprite[] mTileArray;
 
     /**
      * A two-dimensional array of integers in which the number represents the
@@ -134,6 +134,15 @@ public class GameScene extends Scene {
         // 默认每个方块都没有填充东西
         // 后续依靠填充 东西来让他有东西
         clearTiles();  // 初始化瓦片
+        // 更新瓦片
+        resetTiles(4);
+        loadTile(GREEN_STAR,Res.YELLOW_STAR);
+        loadTile(RED_STAR,Res.RED_STAR);
+        loadTile(YELLOW_STAR,Res.YELLOW_STAR);
+
+        updateWalls();
+        initNewGame();
+        draw();
 
     }
 
@@ -361,7 +370,26 @@ public class GameScene extends Scene {
      * @param tilecount
      */
     public void resetTiles(int tilecount) {
-        mTileArray = new Sprite[tilecount];
+        mTileArray = new AnimatedSprite[tilecount];
+    }
+
+    /**
+     *  加载 瓦片
+     * @param key
+     * @param tileName
+     */
+    public void loadTile(int key, String tileName) {
+//        Sprite sprite = new Sprite(0,0,tileName,getVertexBufferObjectManager());
+        AnimatedSprite sprite = new AnimatedSprite(0, 0, tileName,
+                this.getVertexBufferObjectManager());
+        sprite.setSize(mTileSize,mTileSize);
+        mTileArray[key] = sprite;
+//        this.attachChild(sprite);
+//        Bitmap bitmap = Bitmap.createBitmap(mTileSize, mTileSize, Bitmap.Config.ARGB_8888);
+//        Canvas canvas = new Canvas(bitmap);
+//        tile.setBounds(0, 0, mTileSize, mTileSize);
+//        tile.draw(canvas);
+//        mTileArray[key] = bitmap;
     }
 
     // 在 方块上面填充东西《索引值表示图片》
@@ -372,6 +400,23 @@ public class GameScene extends Scene {
 
     private void setMode(int mode) {
 
+    }
+
+    /**
+     *  绘画元素
+     */
+    public void draw() {
+        int i = 0;
+        for (int x = 0; x < mXTileCount; x += 1) {
+            for (int y = 0; y < mYTileCount; y += 1) {
+                if (mTileGrid[x][y] > 0) {
+                    AnimatedSprite sprite = mTileArray[mTileGrid[x][y]];
+                    sprite.setPosition(mXOffset + x * mTileSize, mYOffset + y * mTileSize);
+                    Log.d(TAG, "i == " + (i++));
+                    this.attachChild(sprite);
+                }
+            }
+        }
     }
 
     /**
