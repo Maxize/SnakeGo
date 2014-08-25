@@ -11,14 +11,14 @@ import com.amnon.snakego.snake.res.Res;
 import com.amnon.snakego.snake.util.ConstantUtil;
 import com.amnon.snakego.snake.util.Coordinate;
 import com.orange.content.SceneBundle;
+import com.orange.engine.handler.timer.ITimerCallback;
+import com.orange.engine.handler.timer.TimerHandler;
 import com.orange.entity.scene.Scene;
 import com.orange.entity.sprite.AnimatedSprite;
-import com.orange.entity.sprite.Sprite;
 import com.orange.entity.text.Text;
 import com.orange.input.touch.TouchEvent;
 import com.orange.res.FontRes;
 import com.orange.util.HorizontalAlign;
-import com.orange.util.math.MathUtils;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -76,7 +76,7 @@ public class GameScene extends Scene {
      * captured.
      */
     private long mScore = 0;
-    private long mMoveDelay = 600;
+    private long mMoveDelay = 500;
     /**
      * mLastMove: tracks the absolute time when the snake last moved, and is used
      * to determine if a move should be made based on mMoveDelay.
@@ -99,11 +99,13 @@ public class GameScene extends Scene {
     protected static int mYTileCount;
     private static int mXOffset;
     private static int mYOffset;
+    private TimerHandler mTimerHandler;
 
     @Override
     public void onSceneCreate(SceneBundle bundle) {
         super.onSceneCreate(bundle);
         initView();
+        initTimerHander();
     }
 
     private void initView() {
@@ -140,10 +142,7 @@ public class GameScene extends Scene {
         loadTile(GREEN_STAR,Res.GREEN_STAR);
         loadTile(RED_STAR,Res.RED_STAR);
         loadTile(YELLOW_STAR,Res.YELLOW_STAR);
-
-//        updateWalls();
-//        initNewGame();
-//        updateSnake();
+        // 初始化游戏
         setMode(GameState.READY);
 
     }
@@ -164,29 +163,40 @@ public class GameScene extends Scene {
         mNextDirection = NORTH;
 
         // Two apples to start with
-//        addRandomApple();
-//        addRandomApple();
+        addRandomApple();
+        addRandomApple();
 
-        mMoveDelay = 600;
+        mMoveDelay = 500;
         mScore = 0;
+        this.registerUpdateHandler(mTimerHandler);
+    }
+
+    private void initTimerHander() {
+        mTimerHandler = new TimerHandler((float)(mMoveDelay/1000.0), true,
+                new ITimerCallback() {
+
+                    @Override
+                    public void onTimePassed(TimerHandler pTimerHandler) {
+                        // 定时刷新界面
+                        update();
+                    }
+                });
     }
 
     /**
      * 清除当前分数
      */
     public void clearScore() {
-        mScoreNumStr = "0";
-        updateCurrScore(mScoreNumStr);
+        updateCurrScore(0);
     }
 
     // 更新当前分数
-    private void updateCurrScore(String scoreNumStr) {
-
-        mScoreNumTx.setText(scoreNumStr);
+    private void updateCurrScore(long scoreNum) {
+        mScoreNumTx.setText(scoreNum+"");
     }
 
     @Override
-    public boolean onAreaTouched(TouchEvent pSceneTouchEvent, float pTouchAreaLocalX, float pTouchAreaLocalY) {
+    public boolean onSceneTouchEvent(TouchEvent pSceneTouchEvent) {
         if (pSceneTouchEvent.isActionDown()) {
             mGrabbed = true;
             mStartX = pSceneTouchEvent.getX();
@@ -221,13 +231,13 @@ public class GameScene extends Scene {
                          * we should start a new game.
                          */
                             initNewGame();
-                            setMode( GameState.RUNNING);
+                            setMode(GameState.RUNNING);
                             update();
                             return true;
                         }
 
                         if (mMode ==  GameState.PAUSE) {
-                        /*
+                         /*
                          * If the game is merely paused, we should just continue where
                          * we left off.
                          */
@@ -257,11 +267,6 @@ public class GameScene extends Scene {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-//            if (helpLayer.hasParent()) {
-//                helpLayer.detachSelf();
-//            } else {
-//                showDialog();
-//            }
             showDialog();
             return true;
         }
@@ -344,8 +349,8 @@ public class GameScene extends Scene {
         // 是不是跑到墙壁那里去了
         // Collision detection
         // For now we have a 1-square wall around the entire arena
-        if ((newHead.getX() < 1) || (newHead.getY() < 1) || (newHead.getX() > this.getWidth() - 2)
-                || (newHead.getY() > this.getHeight() - 2)) {
+        if ((newHead.getX() < 1) || (newHead.getY() < 1) || (newHead.getX() > mXTileCount - 2)
+                || (newHead.getY() > mYTileCount - 2)) {
             setMode(GameState.LOSE);
             return;
         }
@@ -366,8 +371,9 @@ public class GameScene extends Scene {
             Coordinate c = mAppleList.get(appleindex);
             if (c.equals(newHead)) {
                 mAppleList.remove(c);
-//                addRandomApple();
-                mScore++;
+                addRandomApple();
+                // 更新当前分数
+                updateCurrScore(++mScore);
                 mMoveDelay *= 0.9;
 
                 growSnake = true;
@@ -465,8 +471,48 @@ public class GameScene extends Scene {
         }
         if (newMode == GameState.LOSE) {
             Log.d(TAG, "the game result is LOSE");
+            gameOver();
         }
 
+    }
+
+    private void gameOver() {
+        unregisterUpdateHandler(mTimerHandler);
+    }
+
+    /**
+     * Selects a random location within the garden that is not currently covered
+     * by the snake. Currently _could_ go into an infinite loop if the snake
+     * currently fills the garden, but we'll leave discovery of this prize to a
+     * truly excellent snake-player.
+     *
+     */
+    private void addRandomApple() {
+        Coordinate newCoord = null;
+        boolean found = false;
+        while (!found) {
+            // Choose a new location for our apple
+            int newX = 1 + RNG.nextInt(mXTileCount - 2);
+            int newY = 1 + RNG.nextInt(mYTileCount - 2);
+            newCoord = new Coordinate(newX, newY);
+
+            // Make sure it's not already under the snake
+            boolean collision = false;
+            int snakelength = mSnakeTrail.size();
+            for (int index = 0; index < snakelength; index++) {
+                if (mSnakeTrail.get(index).equals(newCoord)) {
+                    collision = true;
+                }
+            }
+            // if we're here and there's been no collision, then we have
+            // a good location for an apple. Otherwise, we'll circle back
+            // and try again
+            found = !collision;
+        }
+        if (newCoord == null) {
+            Log.e(TAG, "Somehow ended up with a null newCoord!");
+        }
+        mAppleList.add(newCoord);
     }
 
     /**
