@@ -13,11 +13,11 @@ public class Res {
 
     public static final String GAME_BG = "game_bg";
 
-    public static final String GREENSTAE = "greenstar";
+    public static final String GREEN_STAR = "greenstar";
 
-    public static final String redstar = "redstar";
+    public static final String RED_STAR = "redstar";
 
-    public static final String yellowstar = "yellowstar";
+    public static final String YELLOW_STAR = "yellowstar";
 
 
 

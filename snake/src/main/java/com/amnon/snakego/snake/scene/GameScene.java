@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.util.Log;
 import android.view.KeyEvent;
 import com.amnon.snakego.snake.data.GameState;
+import com.amnon.snakego.snake.entity.TileEntity;
 import com.amnon.snakego.snake.res.GameString;
 import com.amnon.snakego.snake.res.Res;
 import com.amnon.snakego.snake.util.ConstantUtil;
@@ -86,13 +87,13 @@ public class GameScene extends Scene {
      * A hash that maps integer handles specified by the subclasser to the
      * drawable that will be used for that reference
      */
-    private AnimatedSprite[] mTileArray;
+    private String[] mTileArray;
 
     /**
-     * A two-dimensional array of integers in which the number represents the
-     * index of the tile that should be drawn at that locations
+     *   存储整个布局的数组
      */
-    private int[][] mTileGrid;
+    private TileEntity[][] mTileEntityArray;
+
     protected static int mTileSize;
     protected static int mXTileCount;
     protected static int mYTileCount;
@@ -129,20 +130,21 @@ public class GameScene extends Scene {
         // 偏差值
         mXOffset = ((w - (mTileSize * mXTileCount)) / 2);
         mYOffset = ((h - (mTileSize * mYTileCount)) / 2);
-        mTileGrid = new int[mXTileCount][mYTileCount];
+        mTileEntityArray = new TileEntity[mXTileCount][mYTileCount];
         // 把整个场景裁剪成 mXTileCount * mYTileCount 的方块
         // 默认每个方块都没有填充东西
         // 后续依靠填充 东西来让他有东西
         clearTiles();  // 初始化瓦片
         // 更新瓦片
         resetTiles(4);
-        loadTile(GREEN_STAR,Res.YELLOW_STAR);
+        loadTile(GREEN_STAR,Res.GREEN_STAR);
         loadTile(RED_STAR,Res.RED_STAR);
         loadTile(YELLOW_STAR,Res.YELLOW_STAR);
 
-        updateWalls();
-        initNewGame();
-        draw();
+//        updateWalls();
+//        initNewGame();
+//        updateSnake();
+        setMode(GameState.READY);
 
     }
 
@@ -199,18 +201,51 @@ public class GameScene extends Scene {
                 if (Math.abs(offsetX) > Math.abs(offsetY)) {
                     if (offsetX < -FLING_MIN_DISTANCE) {
                         // 向左滑
-//                        toLeft();
+                        if (mDirection != EAST) {
+                            mNextDirection = WEST;
+                        }
+                        return true;
                     } else if (offsetX > FLING_MIN_DISTANCE) {
                         // 向右滑
-//                        toRight();
+                        if (mDirection != WEST) {
+                            mNextDirection = EAST;
+                        }
+                        return true;
                     }
                 } else {
                     if (offsetY < -FLING_MIN_DISTANCE) {
                         // 向上滑
-//                        toUp();
+                        if (mMode == GameState.READY | mMode == GameState.LOSE) {
+                        /*
+                         * At the beginning of the game, or the end of a previous one,
+                         * we should start a new game.
+                         */
+                            initNewGame();
+                            setMode( GameState.RUNNING);
+                            update();
+                            return true;
+                        }
+
+                        if (mMode ==  GameState.PAUSE) {
+                        /*
+                         * If the game is merely paused, we should just continue where
+                         * we left off.
+                         */
+                            setMode( GameState.RUNNING);
+                            update();
+                            return (true);
+                        }
+
+                        if (mDirection != SOUTH) {
+                            mNextDirection = NORTH;
+                        }
+                        return true;
                     } else if (offsetY > FLING_MIN_DISTANCE) {
                         // 向下滑
-//                        toDown();
+                        if (mDirection != NORTH) {
+                            mNextDirection = SOUTH;
+                        }
+                        return true;
                     }
                 }
             }
@@ -270,6 +305,9 @@ public class GameScene extends Scene {
      *  更新小苹果
      */
     private void updateApples() {
+        for (Coordinate c : mAppleList) {
+            setTile(YELLOW_STAR, c.getX(), c.getY());
+        }
 
     }
 
@@ -341,7 +379,9 @@ public class GameScene extends Scene {
         // except if we want the snake to grow
         // 没有长大的话，证明吃不到苹果，尾部的小苹果要去掉哦。
         if (!growSnake) {
-            mSnakeTrail.remove(mSnakeTrail.size() - 1);
+            Coordinate uselessSnake = mSnakeTrail.remove(mSnakeTrail.size() - 1);
+            // 释放小蛇并清除当前点的视图表现
+            setTile(0, uselessSnake.getX(),uselessSnake.getY());
         }
         // 遍历小蛇的坐标，然后再屏幕上打洞，表示小蛇
         int index = 0;
@@ -370,7 +410,7 @@ public class GameScene extends Scene {
      * @param tilecount
      */
     public void resetTiles(int tilecount) {
-        mTileArray = new AnimatedSprite[tilecount];
+        mTileArray = new String[tilecount];
     }
 
     /**
@@ -379,44 +419,54 @@ public class GameScene extends Scene {
      * @param tileName
      */
     public void loadTile(int key, String tileName) {
-//        Sprite sprite = new Sprite(0,0,tileName,getVertexBufferObjectManager());
-        AnimatedSprite sprite = new AnimatedSprite(0, 0, tileName,
-                this.getVertexBufferObjectManager());
-        sprite.setSize(mTileSize,mTileSize);
-        mTileArray[key] = sprite;
-//        this.attachChild(sprite);
-//        Bitmap bitmap = Bitmap.createBitmap(mTileSize, mTileSize, Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(bitmap);
-//        tile.setBounds(0, 0, mTileSize, mTileSize);
-//        tile.draw(canvas);
-//        mTileArray[key] = bitmap;
+        mTileArray[key] = tileName;
     }
 
     // 在 方块上面填充东西《索引值表示图片》
     // 后续根据索引值把对应的方块放上去。
-    public void setTile(int tileindex, int x, int y) {
-        mTileGrid[x][y] = tileindex;
-    }
-
-    private void setMode(int mode) {
-
+    public void setTile(int tileIndex, int x, int y) {
+        if (tileIndex == 0 ) {
+            if (mTileEntityArray[x][y] != null) {
+                mTileEntityArray[x][y].clearTileImg();
+            }
+            return;
+        }
+        if (mTileEntityArray[x][y] == null) {
+            mTileEntityArray[x][y] = new TileEntity(x,y,this);
+            mTileEntityArray[x][y].setTileImg(mTileArray[tileIndex],mTileSize, mTileSize);
+            mTileEntityArray[x][y].setPosition(mXOffset + x * mTileSize, mYOffset + y * mTileSize);
+            this.attachChild(mTileEntityArray[x][y]);
+        }else {
+            mTileEntityArray[x][y].setTileImg(mTileArray[tileIndex],mTileSize, mTileSize);
+        }
     }
 
     /**
-     *  绘画元素
+     * Updates the current mode of the application (RUNNING or PAUSED or the like)
+     * as well as sets the visibility of textview for notification
+     *
+     * @param newMode
      */
-    public void draw() {
-        int i = 0;
-        for (int x = 0; x < mXTileCount; x += 1) {
-            for (int y = 0; y < mYTileCount; y += 1) {
-                if (mTileGrid[x][y] > 0) {
-                    AnimatedSprite sprite = mTileArray[mTileGrid[x][y]];
-                    sprite.setPosition(mXOffset + x * mTileSize, mYOffset + y * mTileSize);
-                    Log.d(TAG, "i == " + (i++));
-                    this.attachChild(sprite);
-                }
-            }
+    public void setMode(int newMode) {
+        int oldMode = mMode;
+        mMode = newMode;
+
+        if (newMode == GameState.RUNNING & oldMode != GameState.RUNNING) {
+            update();
+            return;
         }
+
+        CharSequence str = "";
+        if (newMode == GameState.PAUSE) {
+            Log.d(TAG, "the game result is PAUSE");
+        }
+        if (newMode == GameState.READY) {
+            Log.d(TAG, "the game result is READY");
+        }
+        if (newMode == GameState.LOSE) {
+            Log.d(TAG, "the game result is LOSE");
+        }
+
     }
 
     /**
