@@ -24,7 +24,7 @@ public class TileEntity extends EntityGroup {
      * @param height
      */
     public void setTileImg(String resStr, float width, float height) {
-        if (mTileImg != null) {
+        if (mTileImg == null) {
             mTileImg = new AnimatedSprite(0,0,resStr,getVertexBufferObjectManager());
             mTileImg.setSize(width, height);
             this.attachChild(mTileImg);
