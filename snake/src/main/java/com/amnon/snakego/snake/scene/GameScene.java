@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.util.Log;
 import android.view.KeyEvent;
+import com.amnon.snakego.snake.data.GameDefaultData;
 import com.amnon.snakego.snake.data.GameState;
 import com.amnon.snakego.snake.entity.TileEntity;
 import com.amnon.snakego.snake.res.GameString;
@@ -32,9 +33,6 @@ public class GameScene extends Scene {
     private String mScoreNumStr = "0";
 
     private Text mScoreNumTx;
-
-    /** 手指滑动的最小响应距离 **/
-    private final static int FLING_MIN_DISTANCE = 10;
 
     private boolean mGrabbed = false;
 
@@ -76,7 +74,7 @@ public class GameScene extends Scene {
      * captured.
      */
     private long mScore = 0;
-    private long mMoveDelay = 500;
+    private long mMoveDelay = GameDefaultData.MOVE_DELAY_TIME;
     /**
      * mLastMove: tracks the absolute time when the snake last moved, and is used
      * to determine if a move should be made based on mMoveDelay.
@@ -109,10 +107,6 @@ public class GameScene extends Scene {
     }
 
     private void initView() {
-        // 背景图层
-        AnimatedSprite mBg = new AnimatedSprite(0,0,Res.GAME_BG ,getVertexBufferObjectManager());
-        mBg.setSize(480,780);
-        this.attachChild(mBg);
 
         // 最佳得分文本
         mScoreNumTx = new Text(360, 800,
@@ -166,7 +160,7 @@ public class GameScene extends Scene {
         addRandomApple();
         addRandomApple();
 
-        mMoveDelay = 500;
+        mMoveDelay = GameDefaultData.MOVE_DELAY_TIME;
         mScore = 0;
         this.registerUpdateHandler(mTimerHandler);
     }
@@ -187,7 +181,8 @@ public class GameScene extends Scene {
      * 清除当前分数
      */
     public void clearScore() {
-        updateCurrScore(0);
+        mScore = 0;
+        updateCurrScore(mScore);
     }
 
     // 更新当前分数
@@ -209,13 +204,13 @@ public class GameScene extends Scene {
                 offsetY = pSceneTouchEvent.getY() - mStartY;
 
                 if (Math.abs(offsetX) > Math.abs(offsetY)) {
-                    if (offsetX < -FLING_MIN_DISTANCE) {
+                    if (offsetX < -GameDefaultData.FLING_MIN_DISTANCE) {
                         // 向左滑
                         if (mDirection != EAST) {
                             mNextDirection = WEST;
                         }
                         return true;
-                    } else if (offsetX > FLING_MIN_DISTANCE) {
+                    } else if (offsetX > GameDefaultData.FLING_MIN_DISTANCE) {
                         // 向右滑
                         if (mDirection != WEST) {
                             mNextDirection = EAST;
@@ -223,7 +218,7 @@ public class GameScene extends Scene {
                         return true;
                     }
                 } else {
-                    if (offsetY < -FLING_MIN_DISTANCE) {
+                    if (offsetY < -GameDefaultData.FLING_MIN_DISTANCE) {
                         // 向上滑
                         if (mMode == GameState.READY | mMode == GameState.LOSE) {
                         /*
@@ -250,7 +245,7 @@ public class GameScene extends Scene {
                             mNextDirection = NORTH;
                         }
                         return true;
-                    } else if (offsetY > FLING_MIN_DISTANCE) {
+                    } else if (offsetY > GameDefaultData.FLING_MIN_DISTANCE) {
                         // 向下滑
                         if (mDirection != NORTH) {
                             mNextDirection = SOUTH;

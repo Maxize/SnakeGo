@@ -37,7 +37,7 @@ public class MainActivity extends GameActivity {
 //        FontRes.loadFont(128, 128,
 //                Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32, true,
 //                Color.BLACK, ConstantUtil.FONT_CARD_NUM);
-        FontRes.loadFont(120, 40,
+        FontRes.loadFont(120, 128,
                 Typeface.create(Typeface.DEFAULT, Typeface.NORMAL), 25, true,
                 Color.WHITE, ConstantUtil.FONT_SCORE_NUM);
 
