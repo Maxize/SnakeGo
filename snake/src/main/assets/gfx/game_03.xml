@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<texture version="1" file="game.pvr.ccz" type="pvrccz" width="256" height="256" pixelformat="RGBA_4444" minfilter="linear" magfilter="linear" wrapt="clamp" wraps="clamp" premultiplyalpha="false">
+    <!-- Created with TexturePacker http://texturepacker.com -->
+    <!-- $TexturePacker:SmartUpdate:5f7d0f54a0f866c6fc9063b6cde79419$ -->
+    <textureregion id="0" src="apple.png" x="2" y="2" width="128" height="128" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="128" srcheight="128"/>
+    <textureregion id="1" src="orange_button.png" x="2" y="132" width="40" height="83" rotated="false" trimmed="false" srcx="0" srcy="0" srcwidth="40" srcheight="83"/>
+</texture>

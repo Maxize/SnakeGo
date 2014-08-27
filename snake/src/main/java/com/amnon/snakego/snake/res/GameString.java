@@ -11,4 +11,10 @@ public class GameString {
 
     public static final String OK_STR = "确定";
     public static final String CANCEL_STR = "取消";
+
+    public static final String YOU_LOSE_STR = "你输了！";
+
+    public final static String GAME_BEGIN_STR = "准备！向上开始游戏！";
+
+    public final static String SCORE_STR = "得分";
 }

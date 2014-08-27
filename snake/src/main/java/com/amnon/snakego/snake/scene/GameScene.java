@@ -15,7 +15,6 @@ import com.orange.content.SceneBundle;
 import com.orange.engine.handler.timer.ITimerCallback;
 import com.orange.engine.handler.timer.TimerHandler;
 import com.orange.entity.scene.Scene;
-import com.orange.entity.sprite.AnimatedSprite;
 import com.orange.entity.text.Text;
 import com.orange.input.touch.TouchEvent;
 import com.orange.res.FontRes;
@@ -32,7 +31,7 @@ public class GameScene extends Scene {
 
     private String mScoreNumStr = "0";
 
-    private Text mScoreNumTx;
+    private Text mScoreNumTx, mGameLoseTx, mGameScoreTx, mGameBeginTx;
 
     private boolean mGrabbed = false;
 
@@ -107,7 +106,16 @@ public class GameScene extends Scene {
     }
 
     private void initView() {
-
+        mGameLoseTx = new Text(120,300,
+                FontRes.getFont(ConstantUtil.YOU_LOSE_STR), GameString.YOU_LOSE_STR, 4, getVertexBufferObjectManager());
+        this.attachChild(mGameLoseTx);
+        mGameLoseTx.setVisible(false);
+        mGameScoreTx = new Text(120,300,
+                FontRes.getFont(ConstantUtil.SCORE_STR), GameString.SCORE_STR, 4, getVertexBufferObjectManager());
+        this.attachChild(mGameScoreTx);
+        mGameBeginTx = new Text(20,300,
+                FontRes.getFont(ConstantUtil.GAME_BEGIN_STR), GameString.GAME_BEGIN_STR, 4, getVertexBufferObjectManager());
+        this.attachChild(mGameBeginTx);
         // 最佳得分文本
         mScoreNumTx = new Text(360, 800,
                 FontRes.getFont(ConstantUtil.FONT_SCORE_NUM), mScoreNumStr, 4,
