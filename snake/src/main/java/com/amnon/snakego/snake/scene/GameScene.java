@@ -462,6 +462,9 @@ public class GameScene extends Scene {
 
         if (newMode == GameState.RUNNING & oldMode != GameState.RUNNING) {
             update();
+            if (mGameLoseTx != null) {
+                mGameLoseTx.setVisible(false);
+            }
             return;
         }
 
@@ -471,6 +474,10 @@ public class GameScene extends Scene {
         }
         if (newMode == GameState.READY) {
             Log.d(TAG, "the game result is READY");
+            if (mGameBeginTx != null) {
+                mGameBeginTx.setVisible(true);
+            }
+
         }
         if (newMode == GameState.LOSE) {
             Log.d(TAG, "the game result is LOSE");
@@ -481,6 +488,9 @@ public class GameScene extends Scene {
 
     private void gameOver() {
         unregisterUpdateHandler(mTimerHandler);
+        if (mGameLoseTx != null) {
+            mGameLoseTx.setVisible(true);
+        }
     }
 
     /**
