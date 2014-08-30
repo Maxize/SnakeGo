@@ -6,11 +6,13 @@ import android.util.Log;
 import android.view.KeyEvent;
 import com.amnon.snakego.snake.data.GameDefaultData;
 import com.amnon.snakego.snake.data.GameState;
+import com.amnon.snakego.snake.entity.GameResultLayer;
 import com.amnon.snakego.snake.entity.TileEntity;
 import com.amnon.snakego.snake.res.GameString;
 import com.amnon.snakego.snake.res.Res;
 import com.amnon.snakego.snake.util.ConstantUtil;
 import com.amnon.snakego.snake.util.Coordinate;
+import com.amnon.snakego.snake.util.SharedUtil;
 import com.orange.content.SceneBundle;
 import com.orange.engine.handler.timer.ITimerCallback;
 import com.orange.engine.handler.timer.TimerHandler;
@@ -31,7 +33,9 @@ public class GameScene extends Scene {
 
     private String mScoreNumStr = "0";
 
-    private Text mScoreNumTx, mGameLoseTx, mGameScoreTx, mGameBeginTx;
+    private Text mScoreNumTx,mBestScoreNumTx;
+
+    private GameResultLayer mGameResultLayer;
 
     private boolean mGrabbed = false;
 
@@ -72,7 +76,7 @@ public class GameScene extends Scene {
      * milliseconds between snake movements. This will decrease as apples are
      * captured.
      */
-    private long mScore = 0;
+    private long mScore,mBestScore = 0;
     private long mMoveDelay = GameDefaultData.MOVE_DELAY_TIME;
     /**
      * mLastMove: tracks the absolute time when the snake last moved, and is used
@@ -91,6 +95,7 @@ public class GameScene extends Scene {
      */
     private TileEntity[][] mTileEntityArray;
 
+    public static final int S_DEFAULT_TILESIZE = 24;
     protected static int mTileSize;
     protected static int mXTileCount;
     protected static int mYTileCount;
@@ -106,34 +111,27 @@ public class GameScene extends Scene {
     }
 
     private void initView() {
-        mGameLoseTx = new Text(120,300,
-                FontRes.getFont(ConstantUtil.YOU_LOSE_STR), GameString.YOU_LOSE_STR, 4, getVertexBufferObjectManager());
-        this.attachChild(mGameLoseTx);
-        mGameLoseTx.setVisible(false);
-        mGameScoreTx = new Text(120,300,
-                FontRes.getFont(ConstantUtil.SCORE_STR), GameString.SCORE_STR, 4, getVertexBufferObjectManager());
-        this.attachChild(mGameScoreTx);
-        mGameBeginTx = new Text(20,300,
-                FontRes.getFont(ConstantUtil.GAME_BEGIN_STR), GameString.GAME_BEGIN_STR, 4, getVertexBufferObjectManager());
-        this.attachChild(mGameBeginTx);
         // 最佳得分文本
-        mScoreNumTx = new Text(360, 800,
-                FontRes.getFont(ConstantUtil.FONT_SCORE_NUM), mScoreNumStr, 4,
+        mBestScoreNumTx = new Text(120, 800,
+                FontRes.getFont(ConstantUtil.FONT_SCORE_NUM), GameString.BEST_SCORE_STR, 12,
                 getVertexBufferObjectManager());
-        mScoreNumTx.setHorizontalAlign(HorizontalAlign.RIGHT);
+        this.attachChild(mBestScoreNumTx);
+        // 得分
+        mScoreNumTx = new Text(360, 800,
+                FontRes.getFont(ConstantUtil.FONT_SCORE_NUM), mScoreNumStr, 12,
+                getVertexBufferObjectManager());
+//        mScoreNumTx.setHorizontalAlign(HorizontalAlign.RIGHT);
         // 设置 mScoreNumTx 的X坐标上的中点在字符的中间位置
 //        mScoreNumTx.setCentrePositionX(60);
         this.attachChild(mScoreNumTx);
         // 这里初始化 背景图层《小蛇移动的舞台》
         // 假设在 480* 760的舞台上
-        int w = 480;
-        int h = 760;
-        mTileSize = 12;  // 自己设置的每个瓦片的尺寸
-        mXTileCount = (int) Math.floor(w / mTileSize);
-        mYTileCount = (int) Math.floor(h / mTileSize);
+        mTileSize = S_DEFAULT_TILESIZE;  // 自己设置的每个瓦片的尺寸
+        mXTileCount = (int) Math.floor(ConstantUtil.SCREEN_WIDTH / mTileSize);
+        mYTileCount = (int) Math.floor(ConstantUtil.SCREEN_HEIGHT / mTileSize);
         // 偏差值
-        mXOffset = ((w - (mTileSize * mXTileCount)) / 2);
-        mYOffset = ((h - (mTileSize * mYTileCount)) / 2);
+        mXOffset = (int)((ConstantUtil.SCREEN_WIDTH - (mTileSize * mXTileCount)) / 2);
+        mYOffset = (int)((ConstantUtil.SCREEN_HEIGHT - (mTileSize * mYTileCount)) / 2);
         mTileEntityArray = new TileEntity[mXTileCount][mYTileCount];
         // 把整个场景裁剪成 mXTileCount * mYTileCount 的方块
         // 默认每个方块都没有填充东西
@@ -144,6 +142,13 @@ public class GameScene extends Scene {
         loadTile(GREEN_STAR,Res.GREEN_STAR);
         loadTile(RED_STAR,Res.RED_STAR);
         loadTile(YELLOW_STAR,Res.YELLOW_STAR);
+        // 游戏的结果layer
+        mGameResultLayer = new GameResultLayer(this);
+        this.attachChild(mGameResultLayer);
+        // 初始化最佳得分
+        mBestScore = SharedUtil.getBestScore(getActivity());
+        updateBestScore(mBestScore);
+        clearScore();
         // 初始化游戏
         setMode(GameState.READY);
 
@@ -155,7 +160,6 @@ public class GameScene extends Scene {
 
         // For now we're just going to load up a short default eastbound snake
         // that's just turned north
-
         mSnakeTrail.add(new Coordinate(7, 7));
         mSnakeTrail.add(new Coordinate(6, 7));
         mSnakeTrail.add(new Coordinate(5, 7));
@@ -195,7 +199,22 @@ public class GameScene extends Scene {
 
     // 更新当前分数
     private void updateCurrScore(long scoreNum) {
-        mScoreNumTx.setText(scoreNum+"");
+        if (mScoreNumTx != null) {
+            String scoreStr = GameString.SCORE_STR + ":" + scoreNum;
+            mScoreNumTx.setText(scoreStr);
+            if (scoreNum > mBestScore) {
+
+                updateBestScore(scoreNum);
+            }
+        }
+    }
+
+    private void updateBestScore(long score) {
+        if (mBestScoreNumTx != null) {
+            mBestScore = score;
+            String scoreStr = GameString.BEST_SCORE_STR + ":" + mBestScore;
+            mBestScoreNumTx.setText(scoreStr);
+        }
     }
 
     @Override
@@ -290,7 +309,6 @@ public class GameScene extends Scene {
                 updateApples();
                 mLastMove = now;
             }
-//            mRedrawHandler.sleep(mMoveDelay);
         }
 
     }
@@ -444,6 +462,7 @@ public class GameScene extends Scene {
             mTileEntityArray[x][y] = new TileEntity(x,y,this);
             mTileEntityArray[x][y].setTileImg(mTileArray[tileIndex],mTileSize, mTileSize);
             mTileEntityArray[x][y].setPosition(mXOffset + x * mTileSize, mYOffset + y * mTileSize);
+            mTileEntityArray[x][y].setZIndex(10);
             this.attachChild(mTileEntityArray[x][y]);
         }else {
             mTileEntityArray[x][y].setTileImg(mTileArray[tileIndex],mTileSize, mTileSize);
@@ -462,8 +481,8 @@ public class GameScene extends Scene {
 
         if (newMode == GameState.RUNNING & oldMode != GameState.RUNNING) {
             update();
-            if (mGameLoseTx != null) {
-                mGameLoseTx.setVisible(false);
+            if (mGameResultLayer != null) {
+                mGameResultLayer.setVisible(false);
             }
             return;
         }
@@ -474,8 +493,9 @@ public class GameScene extends Scene {
         }
         if (newMode == GameState.READY) {
             Log.d(TAG, "the game result is READY");
-            if (mGameBeginTx != null) {
-                mGameBeginTx.setVisible(true);
+            if (mGameResultLayer != null) {
+                mGameResultLayer.setGameResult(GameString.GAME_BEGIN_STR);
+                mGameResultLayer.setVisible(true);
             }
 
         }
@@ -488,9 +508,15 @@ public class GameScene extends Scene {
 
     private void gameOver() {
         unregisterUpdateHandler(mTimerHandler);
-        if (mGameLoseTx != null) {
-            mGameLoseTx.setVisible(true);
+        if (mGameResultLayer != null) {
+            String gameResult = GameString.YOU_LOSE_STR + "\n" + GameString.SCORE_STR + ":" + mScore + "\n" + GameString.GAME_BEGIN_STR;
+            mGameResultLayer.setGameResult(gameResult);
+            mGameResultLayer.setVisible(true);
+            if (mScore >= mBestScore) {
+                SharedUtil.setBestScore(this.getActivity(), (int)mScore);
+            }
         }
+        clearScore();
     }
 
     /**

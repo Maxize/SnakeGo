@@ -34,18 +34,13 @@ public class MainActivity extends GameActivity {
     protected void onLoadResources() {
         RegionRes.loadTexturesFromAssets(Res.ALL_XML);
         // 加载字体资源
-        FontRes.loadFont(256, 256,
-                Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 30, true,
-                Color.BLACK, ConstantUtil.GAME_BEGIN_STR);
-        FontRes.loadFont(128, 256,
-                Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32, true,
-                Color.BLACK, ConstantUtil.SCORE_STR);
-        FontRes.loadFont(128, 256,
-                Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32, true,
-                Color.BLACK, ConstantUtil.YOU_LOSE_STR);
+        //
+        FontRes.loadFont(ConstantUtil.GAME_RESULT_WIDTH, ConstantUtil.GAME_RESULT_HEIGHT,
+                Typeface.create(Typeface.DEFAULT, Typeface.BOLD),ConstantUtil.GAME_FONT_SIZE, true,
+                Color.WHITE, ConstantUtil.GAME_RESULT_STR);
 
-        FontRes.loadFont(120, 128,
-                Typeface.create(Typeface.DEFAULT, Typeface.NORMAL), 25, true,
+        FontRes.loadFont(ConstantUtil.GAME_SCORE_WIDTH, ConstantUtil.GAME_SOCRE_HEIGHT,
+                Typeface.create(Typeface.DEFAULT, Typeface.NORMAL), ConstantUtil.GAME_FONT_SIZE, true,
                 Color.WHITE, ConstantUtil.FONT_SCORE_NUM);
 
 

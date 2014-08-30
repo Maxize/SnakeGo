@@ -17,4 +17,6 @@ public class GameString {
     public final static String GAME_BEGIN_STR = "准备！向上开始游戏！";
 
     public final static String SCORE_STR = "得分";
+
+    public final static String BEST_SCORE_STR = "最高得分";
 }
